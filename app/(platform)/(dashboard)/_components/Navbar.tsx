@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { Plus } from "lucide-react";
 import React from "react";
+import MobileSidebar from "./MobileSidebar";
+import Link from "next/link";
 
 const Navbar = () => {
   return (
@@ -10,6 +12,7 @@ const Navbar = () => {
       className="fixed z-50 top-0 px-4 w-full h-14 border-b shadow-sm 
     bg-white flex items-center"
     >
+      <MobileSidebar />
       <div className="flex items-center gap-x-4">
         <div className="hidden md:flex">
           <Logo />
@@ -26,14 +29,16 @@ const Navbar = () => {
           variant="primary"
           className="rounded-sm block md:hidden"
         >
-          <Plus className="h-4 w-4" />
+          <Link href="/select-org">
+            <Plus className="h-4 w-4" />
+          </Link>
         </Button>
       </div>
       <div className="ml-auto flex items-center gap-x-2">
         <OrganizationSwitcher
           hidePersonal
-          afterCreateOrganizationUrl="/organization/:organizationId"
-          afterSelectOrganizationUrl="/organization/:organizationId"
+          afterCreateOrganizationUrl="/organization/:id"
+          afterSelectOrganizationUrl="/organization/:id"
           afterLeaveOrganizationUrl="/select-org"
           appearance={{
             elements: {
