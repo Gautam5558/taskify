@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import React from "react";
 import MobileSidebar from "./MobileSidebar";
 import Link from "next/link";
+import BoardPopover from "@/components/form/BoardPopover";
 
 const Navbar = () => {
   return (
@@ -17,22 +18,24 @@ const Navbar = () => {
         <div className="hidden md:flex">
           <Logo />
         </div>
-        <Button
-          size="sm"
-          variant="primary"
-          className="rounder-sm hidden md:block h-auto py-1.5 px-3"
-        >
-          Create
-        </Button>
-        <Button
-          size="sm"
-          variant="primary"
-          className="rounded-sm block md:hidden"
-        >
-          <Link href="/select-org">
+        <BoardPopover side="bottom" sideOffset={18}>
+          <Button
+            size="sm"
+            variant="primary"
+            className="rounder-sm hidden md:block h-auto py-1.5 px-3"
+          >
+            Create
+          </Button>
+        </BoardPopover>
+        <BoardPopover side="bottom" sideOffset={18}>
+          <Button
+            size="sm"
+            variant="primary"
+            className="rounded-sm block md:hidden"
+          >
             <Plus className="h-4 w-4" />
-          </Link>
-        </Button>
+          </Button>
+        </BoardPopover>
       </div>
       <div className="ml-auto flex items-center gap-x-2">
         <OrganizationSwitcher
