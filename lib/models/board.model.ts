@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const boardSchema = new mongoose.Schema(
   {
@@ -30,6 +30,7 @@ const boardSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    lists: [{ type: Schema.Types.ObjectId, ref: "List" }],
   },
   { timestamps: true }
 );
