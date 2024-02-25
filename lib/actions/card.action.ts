@@ -54,3 +54,38 @@ export const createCard = async (params: {
     console.log(err);
   }
 };
+
+export const updateCardsOrder = async (params: {
+  updatedCardsOrderArray: any;
+  pathname: string;
+  listId?: string;
+  type?: string;
+  movedCardId?: string;
+}) => {
+  try {
+    connectDb();
+    const { updatedCardsOrderArray, pathname, listId, type, movedCardId } =
+      params;
+    for (let i = 0; i < updatedCardsOrderArray.length; i++) {
+      await Card.findByIdAndUpdate(updatedCardsOrderArray[i]._id, {
+        $set: {
+          order: updatedCardsOrderArray[i].order,
+          listId: updatedCardsOrderArray[i].listId,
+        },
+      });
+    }
+
+    if (type) {
+      if (type === "source") {
+        await List.findByIdAndUpdate(listId, { $pull: { cards: movedCardId } });
+      }
+      if (type === "destination") {
+        await List.findByIdAndUpdate(listId, { $push: { cards: movedCardId } });
+      }
+    }
+
+    revalidatePath(pathname);
+  } catch (err) {
+    console.log(err);
+  }
+};

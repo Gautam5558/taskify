@@ -9,10 +9,13 @@ export const getListsFromBoardId = async (params: { boardId: string }) => {
   try {
     connectDb();
     const { boardId } = params;
-    const lists = await List.find({ boardId }).populate({
-      path: "cards",
-      model: "Card",
-    });
+    const lists = await List.find({ boardId })
+      .populate({
+        path: "cards",
+        model: "Card",
+        options: { sort: { order: 1 } },
+      })
+      .sort({ order: 1 });
     return { lists };
   } catch (err) {
     console.log(err);
@@ -140,6 +143,25 @@ export const copyListByListId = async (params: {
 
     await newList.save();
 
+    revalidatePath(pathname);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const updateListorder = async (params: {
+  updatedListsByOrder: any;
+  boardId: string;
+  pathname: string;
+}) => {
+  try {
+    connectDb();
+    const { updatedListsByOrder, boardId, pathname } = params;
+    for (let i = 0; i < updatedListsByOrder.length; i++) {
+      await List.findByIdAndUpdate(updatedListsByOrder[i]._id, {
+        $set: { order: updatedListsByOrder[i].order },
+      });
+    }
     revalidatePath(pathname);
   } catch (err) {
     console.log(err);
