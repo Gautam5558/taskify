@@ -11,6 +11,7 @@ import { updateCardsOrder } from "@/lib/actions/card.action";
 interface Props {
   boardId: string;
   data: any;
+  orgId: string | null | undefined;
 }
 
 function reorder<T>(list: T[], startIndex: number, endIndex: number) {
@@ -20,7 +21,7 @@ function reorder<T>(list: T[], startIndex: number, endIndex: number) {
   return result;
 }
 
-const ListContainer = ({ boardId, data }: Props) => {
+const ListContainer = ({ boardId, data, orgId }: Props) => {
   const [orderedData, setOrderedData] = useState(data);
   const pathname = usePathname();
 
@@ -150,10 +151,17 @@ const ListContainer = ({ boardId, data }: Props) => {
             className="flex gap-x-3 h-full"
           >
             {orderedData.map((list: any, index: number) => {
-              return <ListItem key={list._id} list={list} index={index} />;
+              return (
+                <ListItem
+                  key={list._id}
+                  list={list}
+                  index={index}
+                  orgId={orgId}
+                />
+              );
             })}
             {provided.placeholder}
-            <ListForm boardId={boardId} />
+            <ListForm boardId={boardId} orgId={orgId} />
             <div className="flex-shrink-0 w-1" />
           </ol>
         )}

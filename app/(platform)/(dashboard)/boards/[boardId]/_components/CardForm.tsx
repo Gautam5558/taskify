@@ -7,6 +7,7 @@ import { useEventListener, useOnClickOutside } from "usehooks-ts";
 import { usePathname } from "next/navigation";
 import { createCard } from "@/lib/actions/card.action";
 import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
 interface Props {
   isCardForm: boolean;
@@ -33,6 +34,8 @@ const CardForm = forwardRef<HTMLTextAreaElement, Props>(
       }
     });
 
+    const { user } = useUser();
+
     const [cardTitle, setCardTitle] = useState("");
     const [error, setError] = useState<string | null>(null);
     const pathname = usePathname();
@@ -44,7 +47,14 @@ const CardForm = forwardRef<HTMLTextAreaElement, Props>(
         setError("Card Title shold have minimum 3 characters");
       }
       setLoading(true);
-      await createCard({ listId, title: cardTitle, pathname });
+      await createCard({
+        listId,
+        title: cardTitle,
+        pathname,
+        userId: user?.id,
+        userImage: user?.imageUrl,
+        username: user?.fullName,
+      });
       setLoading(false);
       toast.success(`Card ${cardTitle} created`);
       setCardTitle("");

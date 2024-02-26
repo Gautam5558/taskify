@@ -56,8 +56,6 @@ const FormPicker = ({ setImgData }: any) => {
                 );
               }}
             >
-              {/* <input type="radio" name={image.id} id={image.id} className="hidden" checked={selectedImageId===image.id} 
-              value={`${image.id}|${image.urls.thumb}|${image.urls.full}|${image.links.html}|${image.user.name}`} />   */}
               <Image
                 src={image?.urls?.thumb}
                 alt="boardImg"

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { connectDb } from "../connect";
 import Board from "../models/board.model";
 import List from "../models/list.model";
+import Card from "../models/card.model";
+import Activity from "../models/activity.model";
 
 export const getListsFromBoardId = async (params: { boardId: string }) => {
   try {
@@ -12,7 +14,7 @@ export const getListsFromBoardId = async (params: { boardId: string }) => {
     const lists = await List.find({ boardId })
       .populate({
         path: "cards",
-        model: "Card",
+        model: Card,
         options: { sort: { order: 1 } },
       })
       .sort({ order: 1 });
@@ -26,10 +28,15 @@ export const createList = async (params: {
   title: string;
   boardId: string;
   pathname: string;
+  userId: string | undefined;
+  userImage: string | undefined;
+  username: string | undefined | null;
+  orgId: string | null | undefined;
 }) => {
   try {
     connectDb();
-    const { title, boardId, pathname } = params;
+    const { title, boardId, pathname, userId, userImage, username, orgId } =
+      params;
 
     const board = await Board.findById(boardId);
 
@@ -65,6 +72,19 @@ export const createList = async (params: {
 
     await Board.findByIdAndUpdate(boardId, { $push: { lists: newList._id } });
 
+    const newActivity = new Activity({
+      typeOfActivity: "created",
+      orgId: orgId,
+      itemId: newList._id,
+      itemType: "list",
+      itemTitle: newList.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
+
     revalidatePath(pathname);
   } catch (err) {
     console.log(err);
@@ -75,11 +95,34 @@ export const listTitleUpdate = async (params: {
   listId: string;
   title: string;
   pathname: string;
+  userId: string | undefined;
+  userImage: string | undefined;
+  username: string | undefined | null;
+  orgId: string | null | undefined;
 }) => {
   try {
     connectDb();
-    const { listId, title, pathname } = params;
-    await List.findByIdAndUpdate(listId, { $set: { title } });
+    const { listId, title, pathname, userId, userImage, username, orgId } =
+      params;
+    const list = await List.findByIdAndUpdate(
+      listId,
+      { $set: { title } },
+      { new: true }
+    );
+
+    const newActivity = new Activity({
+      typeOfActivity: "updated",
+      orgId: orgId,
+      itemId: list._id,
+      itemType: "list",
+      itemTitle: list.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
+
     revalidatePath(pathname);
   } catch (err) {
     console.log(err);
@@ -89,12 +132,35 @@ export const listTitleUpdate = async (params: {
 export const deleteList = async (params: {
   listId: string;
   pathname: string;
+  boardId: string | string[];
+  userId: string | undefined;
+  userImage: string | undefined;
+  username: string | undefined | null;
+  orgId: string | null | undefined;
 }) => {
   try {
     connectDb();
-    const { listId, pathname } = params;
+    const { listId, pathname, boardId, userId, userImage, username, orgId } =
+      params;
     // When we create the cards of this list then we will come back here and when deleting a list, first we will delete its cards
-    await List.findByIdAndDelete(listId);
+
+    await Board.findByIdAndUpdate(boardId, { $pull: { lists: listId } });
+
+    const list = await List.findByIdAndDelete(listId);
+
+    const newActivity = new Activity({
+      typeOfActivity: "deleted",
+      orgId: orgId,
+      itemId: list._id,
+      itemType: "list",
+      itemTitle: list.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
+
     revalidatePath(pathname);
   } catch (err) {
     console.log(err);
@@ -105,10 +171,15 @@ export const copyListByListId = async (params: {
   listId: string;
   pathname: string;
   boardId: string | string[];
+  userId: string | undefined;
+  userImage: string | undefined;
+  username: string | undefined | null;
+  orgId: string | null | undefined;
 }) => {
   try {
     connectDb();
-    const { listId, boardId, pathname } = params;
+    const { listId, boardId, pathname, userId, userImage, username, orgId } =
+      params;
     const existingList = await List.findById(listId);
 
     const board = await Board.findById(boardId);
@@ -142,6 +213,19 @@ export const copyListByListId = async (params: {
     });
 
     await newList.save();
+
+    const newActivity = new Activity({
+      typeOfActivity: "created",
+      orgId: orgId,
+      itemId: newList._id,
+      itemType: "list",
+      itemTitle: newList.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
 
     revalidatePath(pathname);
   } catch (err) {

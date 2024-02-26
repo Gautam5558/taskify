@@ -9,9 +9,10 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 interface Props {
   list: any;
   index: number;
+  orgId: string | null | undefined;
 }
 
-const ListItem = ({ list, index }: Props) => {
+const ListItem = ({ list, index, orgId }: Props) => {
   const [isCardForm, setIsCardForm] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -40,7 +41,11 @@ const ListItem = ({ list, index }: Props) => {
               {...provided.dragHandleProps}
               className="w-full rounded-md bg-[#f1f2f4] shadow-md pb-2"
             >
-              <ListHeader list={list} />
+              <ListHeader
+                list={list}
+                clickingAddCardButton={clickingAddCardButton}
+                orgId={orgId}
+              />
               <Droppable droppableId={list._id} type="card">
                 {(provided) => (
                   <ol
@@ -53,7 +58,13 @@ const ListItem = ({ list, index }: Props) => {
                   >
                     {list.cards.map((card: any, index: number) => {
                       return (
-                        <CardItem key={card._id} card={card} index={index} />
+                        <CardItem
+                          key={card._id}
+                          card={card}
+                          index={index}
+                          listName={list.title}
+                          listId={list._id}
+                        />
                       );
                     })}
                     {provided.placeholder}

@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { createBoard } from "@/lib/actions/board.action";
-import { useOrganization } from "@clerk/nextjs";
+import { useOrganization, useUser } from "@clerk/nextjs";
 import FormPicker from "./FormPicker";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -32,27 +32,37 @@ interface Props {
   children: React.ReactNode;
   side: "top" | "right" | "left" | "bottom";
   sideOffset: number;
+  orgId?: string | null | undefined;
 }
 
-const BoardPopover = ({ children, side, sideOffset }: Props) => {
+const BoardPopover = ({ children, side, sideOffset, orgId }: Props) => {
   const form = useForm<z.infer<typeof createBoardSchema>>({
     resolver: zodResolver(createBoardSchema),
     defaultValues: {
       name: "",
     },
   });
-
+  const [imgDataError, setImgDataerror] = useState<string | null>(null);
   const navigate = useRouter();
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const [imgData, setImgData] = useState("");
   const { organization } = useOrganization();
+  const { user } = useUser();
 
   async function onSubmit(values: z.infer<typeof createBoardSchema>) {
+    if (imgData.length === 0) {
+      return setImgDataerror("Image has to be selected to create a board");
+    }
+
     const { newBoard }: any = await createBoard({
       title: values.name,
       organizationId: organization?.id,
       imgData: imgData,
+      orgId,
+      userId: user?.id,
+      username: user?.fullName,
+      userImage: user?.imageUrl,
     });
 
     toast.success("Board created");
@@ -71,6 +81,11 @@ const BoardPopover = ({ children, side, sideOffset }: Props) => {
           Create board
         </div>
         <FormPicker setImgData={setImgData} />
+        {imgDataError && (
+          <div className="text-red-500 text-xs font-medium my-1">
+            {imgDataError}
+          </div>
+        )}
         <PopoverClose asChild>
           <Button
             className="h-auto w-auto p-2 absolute top-2 right-2 text-neutral-600"

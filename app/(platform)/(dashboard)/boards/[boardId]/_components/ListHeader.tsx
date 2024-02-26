@@ -6,8 +6,17 @@ import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useEventListener, useOnClickOutside } from "usehooks-ts";
 import ListOptions from "./ListOptions";
+import { useUser } from "@clerk/nextjs";
 
-const ListHeader = ({ list }: { list: any }) => {
+const ListHeader = ({
+  list,
+  clickingAddCardButton,
+  orgId,
+}: {
+  list: any;
+  orgId: string | null | undefined;
+  clickingAddCardButton: () => void;
+}) => {
   const [isInput, setIsInput] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -16,6 +25,7 @@ const ListHeader = ({ list }: { list: any }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const pathname = usePathname();
+  const { user } = useUser();
 
   const handleListTitleChange = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,7 +36,15 @@ const ListHeader = ({ list }: { list: any }) => {
 
     try {
       setLoading(true);
-      await listTitleUpdate({ listId: list._id, title, pathname });
+      await listTitleUpdate({
+        listId: list._id,
+        title,
+        pathname,
+        userId: user?.id,
+        userImage: user?.imageUrl,
+        username: user?.fullName,
+        orgId,
+      });
       setLoading(false);
       setIsInput(false);
       setError(null);
@@ -70,14 +88,14 @@ const ListHeader = ({ list }: { list: any }) => {
             disabled={loading}
           />
           {error && (
-            <div className="text-[10px] mt-2 text-center text-red-500">
+            <div className="text-xs font-medium mt-2 text-center text-red-500">
               {error}
             </div>
           )}
         </form>
       ) : (
         <div
-          className="w-full text-sm px-2.5 py-1 h-7 font-medium border-transparent cursor-pointer"
+          className="w-full text-sm px-2.5 py-1 h-7 font-medium border-transparent cursor-pointer truncate"
           onClick={(e) => {
             setIsInput(true);
             setTimeout(() => {
@@ -88,7 +106,11 @@ const ListHeader = ({ list }: { list: any }) => {
           {list.title}
         </div>
       )}
-      <ListOptions list={list} />
+      <ListOptions
+        list={list}
+        clickingAddCardButton={clickingAddCardButton}
+        orgId={orgId}
+      />
     </div>
   );
 };

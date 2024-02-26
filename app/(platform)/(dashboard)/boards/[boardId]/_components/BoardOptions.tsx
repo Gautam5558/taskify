@@ -11,13 +11,22 @@ import { PopoverClose } from "@radix-ui/react-popover";
 import { deleteBoard } from "@/lib/actions/board.action";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
 const BoardOptions = ({ board }: { board: any }) => {
   const navigate = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const { user } = useUser();
+
   const handleDelete = async () => {
     setDeleting(true);
-    await deleteBoard({ boardId: board._id, orgId: board.organizationId });
+    await deleteBoard({
+      boardId: board._id,
+      orgId: board.organizationId,
+      userId: user?.id,
+      username: user?.fullName,
+      userImage: user?.imageUrl,
+    });
     setDeleting(false);
     toast.success("Board deleted Successfully");
     navigate.push("/organization/" + board.organizationId);

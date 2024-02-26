@@ -8,8 +8,15 @@ import { toast } from "sonner";
 import { createList } from "@/lib/actions/list.action";
 import { usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { useUser } from "@clerk/nextjs";
 
-const ListForm = ({ boardId }: { boardId: string }) => {
+const ListForm = ({
+  boardId,
+  orgId,
+}: {
+  boardId: string;
+  orgId: string | null | undefined;
+}) => {
   const [isForm, setIsForm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -17,6 +24,7 @@ const ListForm = ({ boardId }: { boardId: string }) => {
   const [newListName, setNewListName] = useState("");
   const [error, setError] = useState<null | string>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const { user } = useUser();
 
   const pathname = usePathname();
 
@@ -43,7 +51,15 @@ const ListForm = ({ boardId }: { boardId: string }) => {
     }
     try {
       setIsCreating(true);
-      await createList({ title: newListName, boardId, pathname: pathname });
+      await createList({
+        title: newListName,
+        boardId,
+        pathname: pathname,
+        userId: user?.id,
+        userImage: user?.imageUrl,
+        username: user?.fullName,
+        orgId,
+      });
       setIsCreating(false);
       setError(null);
       setIsForm(false);
