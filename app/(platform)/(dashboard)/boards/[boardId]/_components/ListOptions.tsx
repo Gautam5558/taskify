@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { copyListByListId, deleteList } from "@/lib/actions/list.action";
+import { useUser } from "@clerk/nextjs";
 import { MoreHorizontal, X } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import React, { useRef, useState } from "react";
@@ -15,19 +16,30 @@ import { toast } from "sonner";
 
 interface Props {
   list: any;
+  clickingAddCardButton: () => void;
+  orgId: string | null | undefined;
 }
 
-const ListOptions = ({ list }: Props) => {
+const ListOptions = ({ list, clickingAddCardButton, orgId }: Props) => {
   const [deleting, setDeleting] = useState(false);
   const [copying, setCopying] = useState(false);
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const params = useParams();
   const { boardId } = params;
+  const { user } = useUser();
 
   const handleDeleteList = async () => {
     setDeleting(true);
-    await deleteList({ listId: list._id, pathname });
+    await deleteList({
+      listId: list._id,
+      pathname,
+      boardId: params.boardId,
+      userId: user?.id,
+      userImage: user?.imageUrl,
+      username: user?.fullName,
+      orgId,
+    });
     setDeleting(false);
     buttonRef.current?.click();
     toast.success("List deleted successfully");
@@ -35,7 +47,15 @@ const ListOptions = ({ list }: Props) => {
 
   const handleListCopy = async () => {
     setCopying(true);
-    await copyListByListId({ listId: list._id, pathname, boardId: boardId });
+    await copyListByListId({
+      listId: list._id,
+      pathname,
+      boardId: boardId,
+      userId: user?.id,
+      userImage: user?.imageUrl,
+      username: user?.fullName,
+      orgId,
+    });
     setCopying(false);
     buttonRef.current?.click();
     toast.success("List copied successfully");
@@ -66,6 +86,10 @@ const ListOptions = ({ list }: Props) => {
           </Button>
         </PopoverClose>
         <Button
+          onClick={() => {
+            clickingAddCardButton();
+            buttonRef.current?.click();
+          }}
           variant="ghost"
           className="rounded-none w-full h-auto p-2 px-5 justify-center font-normal text-sm disabled:cursor-not-allowed disabled:opacity-50"
         >

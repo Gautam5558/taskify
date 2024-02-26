@@ -2,6 +2,7 @@ import Hint from "@/components/Hint";
 import BoardPopover from "@/components/form/BoardPopover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getBoardsByOrganizationId } from "@/lib/actions/board.action";
+import { auth } from "@clerk/nextjs";
 import { HelpCircle, User2 } from "lucide-react";
 import Link from "next/link";
 
@@ -9,6 +10,7 @@ import React, { Suspense } from "react";
 
 const BoardList = async ({ organizationId }: { organizationId: string }) => {
   const { boards }: any = await getBoardsByOrganizationId({ organizationId });
+  const { orgId } = auth();
 
   return (
     <div className="space-y-4 mt-2">
@@ -33,7 +35,7 @@ const BoardList = async ({ organizationId }: { organizationId: string }) => {
               </Link>
             );
           })}
-          <BoardPopover side="right" sideOffset={40}>
+          <BoardPopover side="right" sideOffset={40} orgId={orgId}>
             <div
               role="button"
               className="aspect-video relative h-full w-full bg-muted rounded-sm flex flex-col gap-y-1 items-center justify-center hover:opacity-75 transition "

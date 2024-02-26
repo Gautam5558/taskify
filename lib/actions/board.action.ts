@@ -4,11 +4,28 @@ import { revalidatePath } from "next/cache";
 import { connectDb } from "../connect";
 import Board from "../models/board.model";
 import { redirect } from "next/navigation";
+import Activity from "../models/activity.model";
 
-export const createBoard = async (params: any) => {
+export const createBoard = async (params: {
+  title: string;
+  organizationId: string | undefined;
+  imgData: string;
+  userId: string | undefined;
+  username: string | undefined | null;
+  userImage: string | undefined;
+  orgId: string | undefined | null;
+}) => {
   try {
     connectDb();
-    const { title, organizationId, imgData } = params;
+    const {
+      title,
+      organizationId,
+      imgData,
+      userId,
+      username,
+      userImage,
+      orgId,
+    } = params;
     const dataArray = imgData.split("|");
     const newBoard = new Board({
       title: title,
@@ -21,6 +38,20 @@ export const createBoard = async (params: any) => {
     });
 
     await newBoard.save();
+
+    const newActivity = new Activity({
+      typeOfActivity: "created",
+      orgId: orgId,
+      itemId: newBoard._id,
+      itemType: "board",
+      itemTitle: newBoard.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
+
     return { newBoard };
   } catch (err) {
     console.log(err);
@@ -52,11 +83,32 @@ export const getBoardData = async (params: { boardId: string }) => {
 export const updateBoardTitle = async (params: {
   boardId: string;
   title: string;
+  userId: string | undefined;
+  username: string | undefined | null;
+  userImage: string | undefined;
+  orgId: string | undefined | null;
 }) => {
   try {
     connectDb();
-    const { boardId, title } = params;
-    await Board.findByIdAndUpdate(boardId, { $set: { title } });
+    const { boardId, title, userId, username, userImage, orgId } = params;
+    const board = await Board.findByIdAndUpdate(
+      boardId,
+      { $set: { title } },
+      { new: true }
+    );
+
+    const newActivity = new Activity({
+      typeOfActivity: "updated",
+      orgId: orgId,
+      itemId: board._id,
+      itemType: "board",
+      itemTitle: board.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
   } catch (err) {
     console.log(err);
   }
@@ -65,11 +117,28 @@ export const updateBoardTitle = async (params: {
 export const deleteBoard = async (params: {
   boardId: string;
   orgId: string;
+  userId: string | undefined;
+  username: string | undefined | null;
+  userImage: string | undefined;
 }) => {
   try {
     connectDb();
-    const { boardId, orgId } = params;
-    await Board.findByIdAndDelete(boardId);
+    const { boardId, userId, username, userImage, orgId } = params;
+    const board = await Board.findByIdAndDelete(boardId);
+
+    const newActivity = new Activity({
+      typeOfActivity: "deleted",
+      orgId: orgId,
+      itemId: board._id,
+      itemType: "board",
+      itemTitle: board.title,
+      userId,
+      userImage,
+      username,
+    });
+
+    await newActivity.save();
+
     revalidatePath("/organization/" + orgId);
   } catch (err) {
     console.log(err);
