@@ -9,7 +9,13 @@ import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useEventListener, useOnClickOutside } from "usehooks-ts";
 
-const CardDescription = ({ card }: { card: any }) => {
+const CardDescription = ({
+  card,
+  refetch,
+}: {
+  card: any;
+  refetch: () => void;
+}) => {
   const [isForm, setIsForm] = useState(false);
   const [description, setDescription] = useState(card.description);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -49,6 +55,7 @@ const CardDescription = ({ card }: { card: any }) => {
     });
     setLoading(false);
     setError(null);
+    refetch();
     toast.success(`Card "${card.title}" description updated`);
     setIsForm(false);
   };
