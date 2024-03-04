@@ -946,3 +946,5 @@ export const fallbackImages = [
     downloads: 8267,
   },
 ];
+
+export const MAX_FREE_BOARDS_ALLOWED = 5;

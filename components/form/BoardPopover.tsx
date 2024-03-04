@@ -26,7 +26,8 @@ import { createBoard } from "@/lib/actions/board.action";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import FormPicker from "./FormPicker";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import ProPlanModal from "../ProPlanModal";
 
 interface Props {
   children: React.ReactNode;
@@ -49,83 +50,99 @@ const BoardPopover = ({ children, side, sideOffset, orgId }: Props) => {
   const [imgData, setImgData] = useState("");
   const { organization } = useOrganization();
   const { user } = useUser();
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   async function onSubmit(values: z.infer<typeof createBoardSchema>) {
     if (imgData.length === 0) {
       return setImgDataerror("Image has to be selected to create a board");
     }
 
-    const { newBoard }: any = await createBoard({
-      title: values.name,
-      organizationId: organization?.id,
-      imgData: imgData,
-      orgId,
-      userId: user?.id,
-      username: user?.fullName,
-      userImage: user?.imageUrl,
-    });
+    // Check whether orgid is subscribed or not , if yes allow creating board if not check for orgLimit
 
-    toast.success("Board created");
-    buttonRef.current?.click();
-    form.setValue("name", "");
-    navigate.push("/boards/" + newBoard._id);
+    // Checking for orgLimit
 
-    console.log(values);
+    try {
+      const { newBoard }: any = await createBoard({
+        title: values.name,
+        organizationId: organization?.id,
+        imgData: imgData,
+        orgId,
+        userId: user?.id,
+        username: user?.fullName,
+        userImage: user?.imageUrl,
+        pathname,
+      });
+
+      toast.success("Board created");
+      buttonRef.current?.click();
+      form.setValue("name", "");
+      navigate.push("/boards/" + newBoard._id);
+
+      console.log(values);
+    } catch (err) {
+      console.log(err);
+      toast.error("To create more boards upgrade to Pro Plan");
+      setIsOpen(true);
+    }
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent side={side} sideOffset={sideOffset}>
-        <div className="text-sm font-medium text-center tex-neutral-600 pb-4">
-          Create board
-        </div>
-        <FormPicker setImgData={setImgData} />
-        {imgDataError && (
-          <div className="text-red-500 text-xs font-medium my-1">
-            {imgDataError}
+    <>
+      <Popover>
+        <PopoverTrigger asChild>{children}</PopoverTrigger>
+        <PopoverContent side={side} sideOffset={sideOffset}>
+          <div className="text-sm font-medium text-center tex-neutral-600 pb-4">
+            Create board
           </div>
-        )}
-        <PopoverClose asChild>
-          <Button
-            className="h-auto w-auto p-2 absolute top-2 right-2 text-neutral-600"
-            variant="ghost"
-            ref={buttonRef}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </PopoverClose>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold text-neutral-700">
-                    Board Title
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="my-board"
-                      value={form.getValues("name")}
-                      onChange={(e) => {
-                        form.setValue("name", e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-500 text-xs" />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full">
-              Create
+          <FormPicker setImgData={setImgData} />
+          {imgDataError && (
+            <div className="text-red-500 text-xs font-medium my-1">
+              {imgDataError}
+            </div>
+          )}
+          <PopoverClose asChild>
+            <Button
+              className="h-auto w-auto p-2 absolute top-2 right-2 text-neutral-600"
+              variant="ghost"
+              ref={buttonRef}
+            >
+              <X className="h-4 w-4" />
             </Button>
-          </form>
-        </Form>
-      </PopoverContent>
-    </Popover>
+          </PopoverClose>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-neutral-700">
+                      Board Title
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="my-board"
+                        value={form.getValues("name")}
+                        onChange={(e) => {
+                          form.setValue("name", e.target.value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-500 text-xs" />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full">
+                Create
+              </Button>
+            </form>
+          </Form>
+        </PopoverContent>
+      </Popover>
+      <ProPlanModal isOpen={isOpen} setIsOpen={setIsOpen} />
+    </>
   );
 };
 

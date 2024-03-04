@@ -1,7 +1,9 @@
 import Hint from "@/components/Hint";
 import BoardPopover from "@/components/form/BoardPopover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MAX_FREE_BOARDS_ALLOWED } from "@/constants";
 import { getBoardsByOrganizationId } from "@/lib/actions/board.action";
+import { checkSubscription } from "@/lib/actions/subscription.action";
 import { auth } from "@clerk/nextjs";
 import { HelpCircle, User2 } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +12,7 @@ import React, { Suspense } from "react";
 
 const BoardList = async ({ organizationId }: { organizationId: string }) => {
   const { boards }: any = await getBoardsByOrganizationId({ organizationId });
+  const isPro = await checkSubscription();
   const { orgId } = auth();
 
   return (
@@ -41,7 +44,13 @@ const BoardList = async ({ organizationId }: { organizationId: string }) => {
               className="aspect-video relative h-full w-full bg-muted rounded-sm flex flex-col gap-y-1 items-center justify-center hover:opacity-75 transition "
             >
               <p className="text-sm">Create New board</p>
-              <span className="text-xs">5 remaining</span>
+              <span className="text-xs">
+                {isPro === false
+                  ? MAX_FREE_BOARDS_ALLOWED -
+                    boards.length +
+                    " boards remaining"
+                  : "unlimited boards remaining"}
+              </span>
               <Hint
                 sideOffset={40}
                 description="Free Workspaces can have upto 5 open boards. For unlimited boards upgrade this workspace."

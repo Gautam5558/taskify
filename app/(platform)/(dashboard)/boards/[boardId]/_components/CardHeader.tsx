@@ -6,7 +6,15 @@ import { usePathname } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 
-const CardHeader = ({ card, listName }: { card: any; listName: string }) => {
+const CardHeader = ({
+  card,
+  listName,
+  refetch,
+}: {
+  card: any;
+  listName: string;
+  refetch: () => void;
+}) => {
   const [title, setTitle] = useState(card.title);
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -30,6 +38,7 @@ const CardHeader = ({ card, listName }: { card: any; listName: string }) => {
       username: user?.fullName,
     });
     setLoading(false);
+    refetch();
     toast.success("Card title updated to " + title);
     setError(null);
   };
